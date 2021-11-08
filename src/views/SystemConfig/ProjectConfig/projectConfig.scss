@@ -1,0 +1,17 @@
+.project-config-detail{
+  .progress-ratio{
+    position: relative;
+  }
+  .progress {
+    float: left;
+    .el-input{
+      width: 70px;
+    }
+  }
+  .el-select{
+    width: 100%
+  }
+}
+.margin10{
+  margin:0px 10px;
+}
