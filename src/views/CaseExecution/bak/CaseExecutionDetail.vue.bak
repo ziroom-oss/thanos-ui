@@ -1,0 +1,219 @@
+<template>
+  <div class="case-detail">
+    <el-card>
+      <el-form ref="caseList" :model="addNewCase" label-width="120px">
+        <span class="case-list-title">请选择测试用例集：</span>
+        <AddNewCaeList :type="$route.query.type" ref="addNewCaseList"  :testLevelList.sync="testLevelList"/>
+        <el-button class="case-button" @click="handleCaseSearch" type="primary" plain>查询测试用例</el-button>
+        <el-dialog :visible.sync="dialogVisible" width="80%">
+          <div class="edit_dev">
+            <transfer-main
+              style="text-align: left;"
+              filterable
+              v-model="addNewCase.taskTestCaseList"
+              :titles="['测试用例集合', '已选择-测试用例']"
+              :props="{
+                key: 'id',
+                label: 'caseName'
+              }"
+              :data="caseListDataSource"
+            >
+              <span slot-scope="{ option }">{{ option.casename }}</span>
+            </transfer-main>
+          </div>
+          <el-button style="margin-left: 59%;margin-top: 20px" @click="handleSubmit" type="primary" plain>提交</el-button>
+        </el-dialog>
+        <h3 class="case-list-title">当前已关联的测试用例：</h3>
+        <el-table
+          :data="selectedCaseList"
+          tooltip-effect="dark"
+          style="width: 100%"
+          border
+        >
+          <el-table-column
+            label="用例ID"
+            prop="testCaseId"
+          />
+          <el-table-column
+            prop="casename"
+            label="用例名称"
+          />
+          <el-table-column
+            label="用例等级"
+          >
+            <template slot-scope="scope">
+              {{ TEST_CASE_CONFIG['caseLevelToValue'][scope.row.testCaseLevel] || '--' }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="createUser"
+            label="创建人"
+          />
+          <el-table-column
+            label="操作"
+            fixed="right"
+          >
+            <template slot-scope="scope">
+              <el-tooltip class="item" effect="dark" content="删除" placement="top-start">
+                <i class="el-icon-delete icon" @click="handleDelete(scope.row.id)"></i>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-form>
+      <span class="case-button">
+        <el-button @click="$router.push({path: 'caseExecution'})">返回上一页</el-button>
+      </span>
+    </el-card>
+  </div>
+</template>
+<script>
+import { getCaseList, queryCaseRelevancy, saveTestCaseWithExecution, deleteCase } from '@/api/model/caseExecution.js'
+import { queryTestLevelTypeList } from '@/api/model/testCase'
+import TEST_CASE_CONFIG from '@/config/testCase.config.js'
+export default {
+  name: 'CaseExecutionDetail',
+  data () {
+    return {
+      TEST_CASE_CONFIG,
+      dialogVisible: false,
+      addNewCase: {
+        taskTestCaseList: []
+      },
+      caseExecutionForm: {},
+      caseList: [],
+      caseListDataSource: [],
+      selectedCaseList: [],
+      testLevelList: []
+    }
+  },
+  components: {
+    AddNewCaeList: () => import('../TestCase/TestCaseSearch'),
+    TransferMain: () => import('@/components/Transfer/transfer-main')
+  },
+  async mounted () {
+    await this.getCaseList()
+    await this.queryTestLevelTypeList()
+  },
+  methods: {
+    async getCaseList () { // 获取当前已选中的测试用例
+      const params = {
+        taskId: this.$route.query.id
+      }
+      this.selectedCaseList = await getCaseList(params) || []
+    },
+    async queryTestLevelTypeList () {
+      this.testLevelList = await queryTestLevelTypeList()
+    },
+    async handleDelete (id) {
+      await this.$confirm('将删除本条数据', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const reqData = {
+          taskTestCaseIdList: [id],
+          taskId: this.$route.query.id
+        }
+        deleteCase(reqData);
+      }).catch(() => {
+        this.$notify({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+    handleSelectedList (arr = []) {
+      return arr && arr.map(item => item.id)
+    },
+    async handleSubmit () { // 测试执行进行关联测试用例
+      // const alreadySelectedList = this.handleSelectedList(this.selectedCaseList)
+      const newSelectedList = this.addNewCase.taskTestCaseList
+      const data = {
+        // taskTestCaseIdList: alreadySelectedList.concat(newSelectedList),
+        taskTestCaseIdList: newSelectedList,
+        taskId: this.$route.query.id
+      }
+      const respData = await saveTestCaseWithExecution(data)
+      this.$notify({
+        type: 'success',
+        message: respData
+      })
+      this.getCaseList()
+      this.addNewCase.taskTestCaseList = []
+      this.dialogVisible = false
+      // this.$router.push({ path: 'caseExecution' })
+    },
+    async handleCaseSearch () { // 选择测试用例集
+      this.$refs.addNewCaseList.submitForm()
+      this.dialogVisible = true
+      const { ehrTreePath } = this.$refs.addNewCaseList.testCaseForm
+      const data = {
+        ...this.$refs.addNewCaseList.testCaseForm,
+        ehrTreePath: ehrTreePath ? ehrTreePath.toString() : '',
+        taskId: this.$route.query.id
+      }
+      this.caseListDataSource = await queryCaseRelevancy(data)
+    },
+    handleSelectedCaseSubmit () { // 选中测试用例
+      const taskCaseIds = this.addNewCase.taskTestCaseList
+      return taskCaseIds.map(item => { // 处理返回固定格式
+        return {
+          testCaseId: item
+        }
+      })
+    },
+    // 测试级别
+    async queryTestLevelTypeList () {
+      this.testLevelList = await queryTestLevelTypeList()
+    }
+  }
+}
+</script>
+<style scoped lang="scss">
+
+</style>
+<style lang="scss">
+.case-detail{
+  .el-select, .el-input__inner{
+    width: 100%
+  }
+  .el-cascader, .el-input__inner{
+    width: 100%
+  }
+  .check-case-button{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+}
+</style>
+<style scoped lang="scss">
+.title{
+  margin: 20px;
+}
+.case-list-title{
+  font-size: 15px;
+  display: block;
+  color: #606266;
+  margin-bottom: 10px;
+}
+.case-button{
+  margin: 20px 0px;
+  width: auto;
+  display: inline-block;
+}
+.icon{
+  cursor: pointer;
+  margin-right: 5px;
+  padding: 6px;
+  border-radius: 50%;
+  color: #fff;
+  background:#F96C6C;
+}
+</style>
+<style scoped>
+.edit_dev >>> .el-transfer-panel {
+  width:40%;
+}
+</style>

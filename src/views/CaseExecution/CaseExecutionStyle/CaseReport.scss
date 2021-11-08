@@ -1,0 +1,78 @@
+.report-title{
+  font-size: 20px;
+  font-weight: bold;
+}
+.bg{
+  background-color: #eee;
+  color: rgba($color: #000000, $alpha: 0.7);
+  margin: 15px 0px;
+  padding: 10px;
+  border-radius: 15px;
+  width: 100%;
+}
+.margin-bottom15 {
+  margin-bottom: 15px;
+}
+.back-go{
+  display: inline-block;
+}
+.report-detail-title{
+  font-size: 15px;
+  font-weight: bold;
+}
+.margin-left10{
+  margin-left: 10px;
+}
+.report-detail-content{
+  display: inline-block;
+  font-size: 13px;
+  font-weight: normal;
+}
+.success{
+  color: #5FC346;
+  font-weight: bold;
+}
+.failure{
+  color: #FF3232;
+  font-weight: bold;
+}
+.skip{
+  color: blue;
+  font-weight: bold;
+}
+.chart{
+  width: 100%;
+  height: 100px;
+}
+.check-more{
+  cursor: pointer;
+  transition: 1s ease;
+}
+.case-execution-expand {
+  font-size: 0;
+}
+.case-execution-expand label {
+  width: 90px;
+  color: #99a9bf;
+}
+.case-execution-expand .el-form-item {
+  margin-right: 0;
+  margin-bottom: 0;
+  width: 100%;
+}
+.case-execution-expand .check-detail{
+  width: 100%;
+  color: #FF962B;
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-end;
+  background: #FFFCFA;
+}
+.project-history{
+  cursor: pointer;
+  color: #5175FA;
+  transition: 1s ease;
+  &:hover{
+    color: #1B58F8;
+  }
+}

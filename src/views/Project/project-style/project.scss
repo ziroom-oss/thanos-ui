@@ -1,0 +1,65 @@
+.project-dashboard{
+  .margin-bottom20 {
+    margin-bottom: 20px;
+  }
+  .project-init{
+    > .el-card__body{
+      display: grid;
+      grid-gap: 15px;
+    }
+  }
+  .margin-left10{
+    margin-left: 10px
+  }
+  .name{
+    color: #444;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .content{
+    margin-left: 10px;
+    font-weight: normal;
+  }
+  .create-button{
+    justify-self: start
+  }
+  .check-button-history{
+    width: 100px;
+  }
+  .icon-search{
+    margin-left: 10px;
+    background: #1B58F8;
+    color: #fff;
+  }
+}
+.project-search{
+  > .el-input{
+    width: 200px !important;
+  }
+}
+.pagination{
+  float: right;
+}
+.risk-title{
+  margin-right: 10px;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+.margin-bottom10{
+  margin-bottom: 10px;
+}
+.project-risk{
+  background: #F2F2F2;
+  padding: 10px 5px;
+  border-radius: 5px;
+}
+.row{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 10px 0px;
+  .el-input{
+    width: 74%;
+  }
+}

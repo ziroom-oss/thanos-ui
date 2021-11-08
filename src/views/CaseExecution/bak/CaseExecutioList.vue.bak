@@ -1,0 +1,228 @@
+<template>
+  <div class="case-run-list">
+    <div class="case-total">
+      <span class="title">需求：{{summaryCount.requirementSummary}}</span>
+    </div>
+    <div class="case-total">
+      <span class="title">通过：{{summaryCount.runSuccessCount}}</span>
+      <span class="title">不通过：{{summaryCount.runFailCount}}</span>
+      <span class="title">跳过：{{summaryCount.runSkipCount}}</span>
+      <span class="title">未执行：{{summaryCount.notRunCount}}</span>
+    </div>
+
+    <el-card>
+      <div>
+        <el-button type="primary" @click="onBatchCheck">批量执行</el-button>
+      </div>
+      <el-table
+        ref="multipleTable"
+        :data="testCaseData"
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="expand">
+          <template slot-scope="props">
+            <el-form label-position="left" inline class="case-execution-expand">
+              <el-form-item label="前置条件:">
+                <span>{{ props.row.preCondition }}</span>
+              </el-form-item>
+              <el-form-item label="执行步骤:">
+                <span>{{ props.row.step }}</span>
+              </el-form-item>
+              <el-form-item label="执行结果:">
+                <span>{{ props.row.expectedResults }}</span>
+              </el-form-item>
+            </el-form>
+          </template>
+        </el-table-column>
+        <el-table-column
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          label="用例名称"
+          prop="casename"
+        />
+        <el-table-column
+          label="用例等级"
+          prop="testCaseLevel"
+        >
+        </el-table-column>
+        <el-table-column
+          prop="executionUser"
+          label="最后执行人"
+        >
+        </el-table-column>
+        <el-table-column
+          prop="executionResult"
+          label="最后执行结果"
+        >
+          <template slot-scope="scope">
+            {{scope.row.executionResult}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="relationBug"
+          label="最后关联BUG"
+        />
+        <el-table-column
+          prop="executionVersion"
+          label="最后关联版本"
+        />
+        <el-table-column
+          prop="executionTime"
+          label="执行时间"
+        />
+        <!-- <el-table-column
+          prop="belongToSystem"
+          label="总计执行次数"
+        /> -->
+
+        <el-table-column
+          label="操作"
+          fixed="right"
+        >
+          <template slot-scope="scope">
+            <el-tooltip class="item" effect="dark" content="运行" placement="top-start">
+              <i class="el-icon-video-play icon" @click="handleExecution(scope.row)"></i>
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="关联缺陷" placement="top-start">
+              <i class="el-icon-attract icon" @click="linkBug(scope.row)"></i>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        class="pagination"
+        background
+        @current-change="handleCurrentChange"
+        layout="total, prev, pager, next, jumper"
+        :current-page="pagination.current"
+        :total="pagination.total">
+      </el-pagination>
+    </el-card>
+    <div>
+      <CaseExecutionDialog ref="batchDialog" @queryTestCaseDataByTaskId="queryTestCaseDataByTaskId" :multipleSelectTestCase.sync="multipleSelectTestCase" :taskId="$route.query.taskId"/>
+      <LinkBugDialog ref="LinkBugDialog" @queryTestCaseDataByTaskId="queryTestCaseDataByTaskId" :caseId="testCaseId" :taskId="$route.query.taskId"/>
+    </div>
+  </div>
+</template>
+<script>
+import { queryTestCaseDataByTaskId, getCaseStatusNumber } from '@/api/model/testExecution'
+
+export default {
+  name: 'CaseExecutionList',
+  components: {
+    CaseExecutionDialog: () => import('./CaseExecutionDialog'),
+    LinkBugDialog: () => import('./LinkBugDialog')
+  },
+  async mounted () {
+    const taskId = this.$route.query.taskId
+    await this.queryTestCaseDataByTaskId(taskId)
+    await this.getCaseStatusNumber(taskId)
+  },
+  data: () => ({
+    testCaseData: [],
+    pagination: {
+      total: 0,
+      current: 1,
+      size: 10
+    },
+    summaryCount: {
+      runSuccessCount: 0,
+      runFailCount: 0,
+      runCount: 0,
+      notRunCount: 0,
+      runSkipCount: 0,
+      requirementSummary: ''
+    },
+    multipleSelectTestCase: [],
+    taskId: 0,
+    testCaseId: 0
+  }),
+  methods: {
+    async queryTestCaseDataByTaskId (taskId) {
+      const queryData = {
+        page: {
+          ...this.pagination
+        },
+        searchObj: {
+          taskId: taskId || this.$route.query.taskId
+        }
+      } // 根据接口要求处理请求参数
+      const respData = await queryTestCaseDataByTaskId(queryData)
+      this.testCaseData = respData.records || []
+      this.pagination.total = respData.total
+    },
+    handleCurrentChange (val) { // 分页
+      this.pagination.current = val
+      this.queryTestCaseDataByTaskId()
+    },
+    async getCaseStatusNumber (taskId) {
+      const queryData = {
+        taskId: taskId
+      } // 根据接口要求处理请求参数
+      const respData = await getCaseStatusNumber(queryData)
+      this.summaryCount.runSuccessCount = respData.runSuccessCount || 0
+      this.summaryCount.runFailCount = respData.runFailCount || 0
+      this.summaryCount.runCount = respData.runCount || 0
+      this.summaryCount.notRunCount = respData.notRunCount || 0
+      this.summaryCount.runSkipCount = respData.runSkipCount || 0
+      this.summaryCount.requirementSummary = respData.requirementSummary
+    },
+    handleSelectionChange (val) {
+      this.multipleSelectTestCase = val.map(item => item.testCaseId)
+    },
+    handleExecution (data) {
+      this.multipleSelectTestCase = [data.testCaseId]
+      this.$refs.batchDialog.dialogVisible = true
+    },
+    linkBug (data) {
+      this.testCaseId = data.testCaseId
+      this.$refs.LinkBugDialog.dialogVisible = true
+    },
+    onBatchCheck () { // 批量执行 选中用例为空，则提示
+      this.multipleSelectTestCase.length === 0 ? (
+        this.$notify({
+          type: 'error',
+          title: 'Error',
+          message: '先选择需要执行的测试用例吧～'
+        })
+      ) : (this.$refs.batchDialog.dialogVisible = true)
+    }
+
+  }
+}
+</script>
+<style scoped lang="scss">
+.icon{
+  margin-right: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  color: #fff;
+}
+.el-icon-video-play, .el-icon-attract{
+  background: #1B58F8;
+}
+.el-icon-delete{
+  background: #F76C6C;
+}
+.pagination{
+  margin: 20px 10px 30px 0px;
+  float: right;
+}
+.title{
+  color: #606266;
+  font-size: 15px;
+  margin-right: 10px;
+}
+.case-total{
+  margin: 10px 0px;
+}
+</style>
+<style scoped lang="scss">
+@import "../Project/project-style/projectReport.scss";
+</style>

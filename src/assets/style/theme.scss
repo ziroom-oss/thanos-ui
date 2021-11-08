@@ -1,0 +1,27 @@
+// 主背景
+$BodyBgColor:#EFF1F4;
+
+// 头部
+$HeaderBgColor: #FFFFFF; // 头部背景
+$HeaderHeight: 40px; // 头部高度
+$HeaderFontColor: rgba(0,0,0,0.7); // 头部文字颜色
+
+// 左侧菜单
+$SidebarLogoBgColor: #545C64; // 侧边栏 Logo 背景
+$SidebarLogoWidth: 210px; // 侧导航宽度
+$SidebarBgColor:#545C64; // 侧导航背景色
+$SidebarTextColor: #989EB3; // 菜单文字颜色
+$SidebarActiveTextColor: #FFCB40; // 激活文字颜色
+$SidebarItemTitleHoverColor: #545C64; // 菜单子项标题 Hover 颜色
+$SidebarItemHoverBgColor: #545C64; // 菜单子项 Hover 颜色
+$SidebarItemHoverTextColor: #FFFFFF; // 菜单子项 Hover 颜色
+
+$SidebarItemActiveBgColor: #545C64; // 菜单子项选中颜色
+$SidebarWidth: 200px; // 菜单宽度
+
+$minMainHeight: 85vh;
+:export {
+  SidebarBgColor: $SidebarBgColor;
+  SidebarTextColor: $SidebarTextColor;
+  SidebarActiveTextColor: $SidebarActiveTextColor;
+}

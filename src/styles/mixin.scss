@@ -1,0 +1,16 @@
+// 文本单行超出显示省略号
+@mixin new-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// 文本多行显示省略号
+@mixin article-container($line: 4) {
+    display: -webkit-box;
+    word-break: break-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $line; 
+}
