@@ -157,292 +157,184 @@
   </div>
 </template>
 <script>
-  import {
-    batchDeleteTestCase,
-    getTestCaseDetailById,
-    queryTestCaseData,
-    queryTestCaseHistoryByCaseId,
-    queryTestLevelTypeList
-  } from '@/api/model/testCase'
-  import axios from 'axios'
-  import {mapGetters} from 'vuex'
-  import {moduleTreeMixin} from './mixin/mixin'
+import {
+  batchDeleteTestCase,
+  getTestCaseDetailById,
+  queryTestCaseData,
+  queryTestCaseHistoryByCaseId,
+  queryTestLevelTypeList
+} from '@/api/model/testCase'
+import axios from 'axios'
+import { mapGetters } from 'vuex'
+import { moduleTreeMixin } from './mixin/mixin'
 
-  export default {
-    name: 'TestCase',
-    mixins: [moduleTreeMixin],
-    components: {
-      Tree: () => import('@/components/Tree/index'),
-      Search: () => import('./TestCaseSearch'),
-      TestCaseBatchDialog: () => import('./TestCaseBatchDialog'),
-      TestCaseDetailDialog: () => import('./TestCaseDetailDialog'),
-      TestCaseUploadDialog: () => import('./TestUploadDialog'),
-      TestCaseInfoDialog: () => import('./TestCaseInfoDialog')
-    },
-    computed: {
-      ...mapGetters(['userInfo', 'checkedModuleData']),
-      defaultProps() {
-        return {
-          children: 'children',
-          label: 'label'
-        }
-      }
-    },
-    async mounted() {
-      const data = {
-        ...this.testCaseSearchValue
-      }
-      await this.queryTestCaseData(data)
-      await this.queryTestLevelTypeList()
-    },
-    data() {
+export default {
+  name: 'TestCase',
+  mixins: [moduleTreeMixin],
+  components: {
+    Tree: () => import('@/components/Tree/index'),
+    Search: () => import('./TestCaseSearch'),
+    TestCaseBatchDialog: () => import('./TestCaseBatchDialog'),
+    TestCaseDetailDialog: () => import('./TestCaseDetailDialog'),
+    TestCaseUploadDialog: () => import('./TestUploadDialog'),
+    TestCaseInfoDialog: () => import('./TestCaseInfoDialog')
+  },
+  computed: {
+    ...mapGetters(['userInfo', 'checkedModuleData']),
+    defaultProps () {
       return {
-        testCaseSearchValue: {},
-        multipleSelectTestCase: [],
-        testCaseData: [],
-        pagination: {
-          total: 0,
-          current: 1,
-          size: 100
-        },
-        type: 'add',
-        testLevelList: [],
-        treePath: '',
-        //
-        detailDialogValue: {
-          relationRequirement: '',
-          createUser: '',
-          belongToSystem: 0,
-          belongToModule: [],
-          belongPlatform: '',
-          type: ''
-        },
-        tableLoading: false
+        children: 'children',
+        label: 'label'
       }
-    },
-    watch: {
-      checkedModuleData(applicationModuleTree) {
-        if (applicationModuleTree.app) {
-          const applicationId = applicationModuleTree.id
-          // 应用层级
-          const testCaseSearch = {
-            ...this.testCaseSearchValue,
-            applicationId: applicationId,
-            belongToSystem: applicationId,
-            belongToModule: ''
-          }
-          this.testCaseSearchValue = testCaseSearch
-        } else {
-          const moduleTreePath = applicationModuleTree.moduleTreePath.split(',')
-          const testCaseSearch = {
-            ...this.testCaseSearchValue,
-            belongToSystem: applicationModuleTree.applicationId,
-            belongToModule: applicationModuleTree.id,
-            belongToModuleList: moduleTreePath.map((item) => +item)
-          }
-          this.testCaseSearchValue = testCaseSearch
-        }
-        this.$refs.testCaseSearch.testCaseForm = this.testCaseSearchValue
-        const littleStars = this.$refs.tree.littleStars
-        if (littleStars) {
-          this.queryTestCaseData()
-        }
-        this.$refs.tree.littleStars = true
+    }
+  },
+  async mounted () {
+    const data = {
+      ...this.testCaseSearchValue
+    }
+    await this.queryTestCaseData(data)
+    await this.queryTestLevelTypeList()
+  },
+  data () {
+    return {
+      testCaseSearchValue: {},
+      multipleSelectTestCase: [],
+      testCaseData: [],
+      pagination: {
+        total: 0,
+        current: 1,
+        size: 100
       },
-      treePath(val) {
-        this.testCaseSearchValue.belongToModule = ''
-        this.testCaseSearchValue.belongToSystem = ''
-        this.testCaseSearchValue.ehrTreePath = val.toString()
+      type: 'add',
+      testLevelList: [],
+      treePath: '',
+      //
+      detailDialogValue: {
+        relationRequirement: '',
+        createUser: '',
+        belongToSystem: 0,
+        belongToModule: [],
+        belongPlatform: '',
+        type: ''
+      },
+      tableLoading: false
+    }
+  },
+  watch: {
+    checkedModuleData (applicationModuleTree) {
+      if (applicationModuleTree.app) {
+        const applicationId = applicationModuleTree.id
+        // 应用层级
+        const testCaseSearch = {
+          ...this.testCaseSearchValue,
+          applicationId: applicationId,
+          belongToSystem: applicationId,
+          belongToModule: ''
+        }
+        this.testCaseSearchValue = testCaseSearch
+      } else {
+        const moduleTreePath = applicationModuleTree.moduleTreePath.split(',')
+        const testCaseSearch = {
+          ...this.testCaseSearchValue,
+          belongToSystem: applicationModuleTree.applicationId,
+          belongToModule: applicationModuleTree.id,
+          belongToModuleList: moduleTreePath.map((item) => +item)
+        }
+        this.testCaseSearchValue = testCaseSearch
+      }
+      this.$refs.testCaseSearch.testCaseForm = this.testCaseSearchValue
+      const littleStars = this.$refs.tree.littleStars
+      if (littleStars) {
         this.queryTestCaseData()
       }
+      this.$refs.tree.littleStars = true
     },
-    methods: {
-      async queryTestCaseData() {
-        // 测试用例列表数据源
-        const {ehrTreePath, createTimeVal, updateTimeVal} =
+    treePath (val) {
+      this.testCaseSearchValue.belongToModule = ''
+      this.testCaseSearchValue.belongToSystem = ''
+      this.testCaseSearchValue.ehrTreePath = val.toString()
+      this.queryTestCaseData()
+    }
+  },
+  methods: {
+    async queryTestCaseData () {
+      // 测试用例列表数据源
+      const { ehrTreePath, createTimeVal, updateTimeVal } =
           this.testCaseSearchValue
-        const queryData = {
-          page: {
-            ...this.pagination
-          },
-          searchObj: {
-            ...this.testCaseSearchValue,
-            ehrTreePath: ehrTreePath ? ehrTreePath.toString() : '',
-            createTimeVal: createTimeVal ? createTimeVal.toString() : '',
-            updateTimeVal: updateTimeVal ? updateTimeVal.toString() : ''
-          }
-        } // 根据接口要求处理请求参数
-        this.tableLoading = true
-        const res = await queryTestCaseData(queryData)
-          .finally(() => {
-            this.tableLoading = false
-          })
-        const respData = res.data
-        this.testCaseData = respData.records || []
-        this.pagination.total = respData.total
-      },
-      async queryTestCaseDataFind() {
-        this.pagination.current = 1
-        await this.queryTestCaseData()
-      },
-      downloadCaseDemo() {
-        this._downLaod(
-          '',
-          '/testCase/exportTestCaseExcelTemplate?idList=',
-          '测试用例模版.xlsx'
-        )
-      },
-      handleSelectionChange(val) {
-        this.multipleSelectTestCase = val
-      },
-      onBatchCheck() {
-        // 批量审批 选中用例为空，则提示
-        this.multipleSelectTestCase.length === 0
-          ? this.$notify({
-            type: 'error',
-            title: 'Error',
-            message: '先选择需要审批的测试用例吧～'
-          })
-          : (this.$refs.batchDialog.dialogVisible = true)
-      },
-      onBatchDelete() {
-        // 批量审批 选中用例为空，则提示
-        this.multipleSelectTestCase.length === 0
-          ? this.$notify({
-            type: 'error',
-            title: 'Error',
-            message: '先选择需要删除的测试用例吧～'
-          })
-          : this.$confirm('确定删除？', '提示', {
-            // delete
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          })
-            .then(async () => {
-              let ids = ''
-              this.multipleSelectTestCase.forEach(function (item, index) {
-                ids += item.id + ','
-              })
-              const params = {idList: ids}
-              // await batchDeleteTestCase(params)
-              batchDeleteTestCase(params).then((res) => {
-                if (res.success) {
-                  this.$notify({
-                    type: 'success',
-                    message: '删除' + res.message
-                  })
-                }
-                this.queryTestCaseData(this.testCaseSearchValue)
-              })
-            })
-            .catch(() => {
-              this.$notify({
-                type: 'info',
-                message: '已取消删除'
-              })
-            })
-      },
-      // 跳转单个审批
-      singleCheck(id) {
-        // 批量审批 选中用例为空，则提示
-        this.multipleSelectTestCase = [id]
-        this.$refs.batchDialog.dialogVisible = true
-      },
-      handleCurrentChange(val) {
-        // 分页
-        this.pagination.current = val
-        this.queryTestCaseData(this.testCaseSearchValue)
-      },
-      handleSizeChange(val) {
-        this.pagination.size = val
-        this.queryTestCaseData(this.testCaseSearchValue)
-      },
-      checkboxT(row, rowIndex) {
-        // 判断只有是待审核的才可以选中
-        if (row.testCaseStatus === 'pending') {
-          return true // 不禁用
-        } else {
-          return false // 禁用
+      const queryData = {
+        page: {
+          ...this.pagination
+        },
+        searchObj: {
+          ...this.testCaseSearchValue,
+          ehrTreePath: ehrTreePath ? ehrTreePath.toString() : '',
+          createTimeVal: createTimeVal ? createTimeVal.toString() : '',
+          updateTimeVal: updateTimeVal ? updateTimeVal.toString() : ''
         }
-      },
-      onAddNewCase() {
-        // 应用 没有applicationId id为applicationId 模块 有applicationId id
-        let {id, applicationId, moduleTreePath} = this.checkedModuleData
-        const detailDialog = this.$refs.detailDialog
-        detailDialog.detailDialogValue = Object.assign(
-          {},
-          detailDialog.detailDialogValue
-        )
-        if (!applicationId) {
-          detailDialog.detailDialogValue.belongToSystem = id
-        } else {
-          moduleTreePath = moduleTreePath.split(',')
-          detailDialog.detailDialogValue.belongToSystem = applicationId
-          detailDialog.detailDialogValue.moduleTreePath = moduleTreePath.map(
-            (item) => +item
-          ) // 将moduletreepath =》数值
-        }
-        // 新建
-        detailDialog.caseType = 'add'
-        detailDialog.testCaseDetailDialog = true
-      },
-      async onEditNewCase(id) {
-        // 编辑
-        const refInstance = this.$refs.detailDialog
-        refInstance.detailDialogValue = Object.assign(
-          {},
-          refInstance.detailDialogValue
-        )
-        const params = {id}
-        const res = await getTestCaseDetailById(params)
-        const relospData = res.data
-        relospData.belongToSystem = +relospData.belongToSystem
-        refInstance.caseType = 'edit'
-        refInstance.detailDialogValue = relospData
-        let {moduleTreePath} = relospData
-        if (moduleTreePath) {
-          moduleTreePath = moduleTreePath.split(',')
-          refInstance.detailDialogValue.moduleTreePath = moduleTreePath.map(
-            (item) => +item
-          )
-        }
-        refInstance.testCaseDetailDialog = true
-      },
-
-      // 详情页
-      async onInfoNewCase(id) {
-        const params = {id: id}
-        const res = await getTestCaseDetailById(params)
-        const relospData = res.data
-        this.$refs.infoDialog.detailDialogValue = relospData
-        // 历史版本回溯
-        const caseKey = relospData.caseKey
-        if (caseKey) {
-          const keys = {caseKey: caseKey}
-          const res = await queryTestCaseHistoryByCaseId(keys)
-          this.$refs.infoDialog.testCaseHisData = res.data
-        }
-        this.$refs.infoDialog.testCaseInfoDialog = true
-      },
-      onDelNewCase(id) {
-        // delete
-        this.$confirm('确定删除？', '提示', {
+      } // 根据接口要求处理请求参数
+      this.tableLoading = true
+      const res = await queryTestCaseData(queryData)
+        .finally(() => {
+          this.tableLoading = false
+        })
+      const respData = res.data
+      this.testCaseData = respData.records || []
+      this.pagination.total = respData.total
+    },
+    async queryTestCaseDataFind () {
+      this.pagination.current = 1
+      await this.queryTestCaseData()
+    },
+    downloadCaseDemo () {
+      this._downLaod(
+        '',
+        '/testCase/exportTestCaseExcelTemplate?idList=',
+        '测试用例模版.xlsx'
+      )
+    },
+    handleSelectionChange (val) {
+      this.multipleSelectTestCase = val
+    },
+    onBatchCheck () {
+      // 批量审批 选中用例为空，则提示
+      this.multipleSelectTestCase.length === 0
+        ? this.$notify({
+          type: 'error',
+          title: 'Error',
+          message: '先选择需要审批的测试用例吧～'
+        })
+        : (this.$refs.batchDialog.dialogVisible = true)
+    },
+    onBatchDelete () {
+      // 批量审批 选中用例为空，则提示
+      this.multipleSelectTestCase.length === 0
+        ? this.$notify({
+          type: 'error',
+          title: 'Error',
+          message: '先选择需要删除的测试用例吧～'
+        })
+        : this.$confirm('确定删除？', '提示', {
+          // delete
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         })
           .then(async () => {
-            const params = {idList: id}
-            const res = await batchDeleteTestCase(params)
-            const response = res.data
-            if (response === '成功') {
-              this.$notify({
-                type: 'success',
-                message: response
-              })
-            }
-            await this.queryTestCaseData(this.testCaseSearchValue)
+            let ids = ''
+            this.multipleSelectTestCase.forEach(function (item, index) {
+              ids += item.id + ','
+            })
+            const params = { idList: ids }
+            // await batchDeleteTestCase(params)
+            batchDeleteTestCase(params).then((res) => {
+              if (res.success) {
+                this.$notify({
+                  type: 'success',
+                  message: '删除' + res.message
+                })
+              }
+              this.queryTestCaseData(this.testCaseSearchValue)
+            })
           })
           .catch(() => {
             this.$notify({
@@ -450,44 +342,152 @@
               message: '已取消删除'
             })
           })
-      },
-      onUploadCase() {
-        // 上传
-        const uploadDialog = this.$refs.uploadDialog
-        uploadDialog.testCaseUploadDialog = true
-        const {id, applicationId, moduleTreePath} = this.checkedModuleData
-        if (!applicationId) {
-          uploadDialog.testCaseUploadForm.belongToSystem = id
-        } else {
-          uploadDialog.queryModuleInAppList(applicationId)
-          const modulePath = moduleTreePath.split(',')
-          uploadDialog.testCaseUploadForm.belongToSystem = applicationId
-          uploadDialog.belongToModule = modulePath.map((item) => +item) // 将moduletreepath =》数值
-        }
-      },
-      downloadSelectedCase() {
-        // 批量 选中用例为空，则提示
-        if (this.multipleSelectTestCase.length === 0) {
-          this.$notify({
-            type: 'error',
-            title: 'Error',
-            message: '先选择需要审批的测试用例吧～'
-          })
-          return
-        }
-        let ids = ''
-        this.multipleSelectTestCase.forEach(function (item, index) {
-          ids += item.id + ','
-        })
-        this._downLaod(
-          ids,
-          '/testCase/exportTestCaseExcelTemplate?idList=',
-          '选中测试用例列表.xlsx'
+    },
+    // 跳转单个审批
+    singleCheck (id) {
+      // 批量审批 选中用例为空，则提示
+      this.multipleSelectTestCase = [id]
+      this.$refs.batchDialog.dialogVisible = true
+    },
+    handleCurrentChange (val) {
+      // 分页
+      this.pagination.current = val
+      this.queryTestCaseData(this.testCaseSearchValue)
+    },
+    handleSizeChange (val) {
+      this.pagination.size = val
+      this.queryTestCaseData(this.testCaseSearchValue)
+    },
+    checkboxT (row, rowIndex) {
+      // 判断只有是待审核的才可以选中
+      if (row.testCaseStatus === 'pending') {
+        return true // 不禁用
+      } else {
+        return false // 禁用
+      }
+    },
+    onAddNewCase () {
+      // 应用 没有applicationId id为applicationId 模块 有applicationId id
+      let { id, applicationId, moduleTreePath } = this.checkedModuleData
+      const detailDialog = this.$refs.detailDialog
+      detailDialog.detailDialogValue = Object.assign(
+        {},
+        detailDialog.detailDialogValue
+      )
+      if (!applicationId) {
+        detailDialog.detailDialogValue.belongToSystem = id
+      } else {
+        moduleTreePath = moduleTreePath.split(',')
+        detailDialog.detailDialogValue.belongToSystem = applicationId
+        detailDialog.detailDialogValue.moduleTreePath = moduleTreePath.map(
+          (item) => +item
+        ) // 将moduletreepath =》数值
+      }
+      // 新建
+      detailDialog.caseType = 'add'
+      detailDialog.testCaseDetailDialog = true
+    },
+    async onEditNewCase (id) {
+      // 编辑
+      const refInstance = this.$refs.detailDialog
+      refInstance.detailDialogValue = Object.assign(
+        {},
+        refInstance.detailDialogValue
+      )
+      const params = { id }
+      const res = await getTestCaseDetailById(params)
+      const relospData = res.data
+      relospData.belongToSystem = +relospData.belongToSystem
+      refInstance.caseType = 'edit'
+      refInstance.detailDialogValue = relospData
+      let { moduleTreePath } = relospData
+      if (moduleTreePath) {
+        moduleTreePath = moduleTreePath.split(',')
+        refInstance.detailDialogValue.moduleTreePath = moduleTreePath.map(
+          (item) => +item
         )
-      },
-      _downLaod(val, url, fileName) {
-        axios
-          .post(
+      }
+      refInstance.testCaseDetailDialog = true
+    },
+
+    // 详情页
+    async onInfoNewCase (id) {
+      const params = { id: id }
+      const res = await getTestCaseDetailById(params)
+      const relospData = res.data
+      this.$refs.infoDialog.detailDialogValue = relospData
+      // 历史版本回溯
+      const caseKey = relospData.caseKey
+      if (caseKey) {
+        const keys = { caseKey: caseKey }
+        const res = await queryTestCaseHistoryByCaseId(keys)
+        this.$refs.infoDialog.testCaseHisData = res.data
+      }
+      this.$refs.infoDialog.testCaseInfoDialog = true
+    },
+    onDelNewCase (id) {
+      // delete
+      this.$confirm('确定删除？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(async () => {
+          const params = { idList: id }
+          const res = await batchDeleteTestCase(params)
+          const response = res.data
+          if (response === '成功') {
+            this.$notify({
+              type: 'success',
+              message: response
+            })
+          }
+          await this.queryTestCaseData(this.testCaseSearchValue)
+        })
+        .catch(() => {
+          this.$notify({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
+    },
+    onUploadCase () {
+      // 上传
+      const uploadDialog = this.$refs.uploadDialog
+      uploadDialog.testCaseUploadDialog = true
+      const { id, applicationId, moduleTreePath } = this.checkedModuleData
+      if (!applicationId) {
+        uploadDialog.testCaseUploadForm.belongToSystem = id
+      } else {
+        uploadDialog.queryModuleInAppList(applicationId)
+        const modulePath = moduleTreePath.split(',')
+        uploadDialog.testCaseUploadForm.belongToSystem = applicationId
+        uploadDialog.belongToModule = modulePath.map((item) => +item) // 将moduletreepath =》数值
+      }
+    },
+    downloadSelectedCase () {
+      // 批量 选中用例为空，则提示
+      if (this.multipleSelectTestCase.length === 0) {
+        this.$notify({
+          type: 'error',
+          title: 'Error',
+          message: '先选择需要审批的测试用例吧～'
+        })
+        return
+      }
+      let ids = ''
+      this.multipleSelectTestCase.forEach(function (item, index) {
+        ids += item.id + ','
+      })
+      this._downLaod(
+        ids,
+        '/testCase/exportTestCaseExcelTemplate?idList=',
+        '选中测试用例列表.xlsx'
+      )
+    },
+    _downLaod (val, url, fileName) {
+      axios
+        .post(
             `${process.env.VUE_APP_BASE_API}${url}` + (val ?? ''),
             {},
             {
@@ -499,30 +499,30 @@
               },
               responseType: 'blob'
             }
-          )
-          .then((res) => {
-            const blob = new Blob([res.data])
-            const url = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = url
-            link.download = fileName
-            document.body.appendChild(link)
-            link.click()
-            // 释放URL对象
-            URL.revokeObjectURL(link.href)
-            document.body.removeChild(link)
-          })
-          .catch((err) => {
-            console.log(err)
-          })
-      },
-      // 测试级别
-      async queryTestLevelTypeList() {
-        const res = await queryTestLevelTypeList()
-        this.testLevelList = res.data
-      }
+        )
+        .then((res) => {
+          const blob = new Blob([res.data])
+          const url = window.URL.createObjectURL(blob)
+          const link = document.createElement('a')
+          link.href = url
+          link.download = fileName
+          document.body.appendChild(link)
+          link.click()
+          // 释放URL对象
+          URL.revokeObjectURL(link.href)
+          document.body.removeChild(link)
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
+    // 测试级别
+    async queryTestLevelTypeList () {
+      const res = await queryTestLevelTypeList()
+      this.testLevelList = res.data
     }
   }
+}
 </script>
 <style scoped lang="scss">
   .icon {
