@@ -26,7 +26,8 @@ const caseExecutionDetailAndList = () => import('@/views/CaseExecution/CaseExecu
 // const ApiCaseExecution = () => import('@/src/views/CaseExecution/ApiCaseExecution/ApiCaseExecution.bak')
 const unFound = () => import(/* webpackChunkName: "404" */ '@/components/404/404')
 const unUser = () => import(/* webpackChunkName: "500" */ '@/components/500/500')
-const login = () => import(/* webpackChunkName: "Login" */ '@/views/Login/Login')
+const Login = () => import(/* webpackChunkName: "Login" */ '@/views/Login/Login')
+const Register = () => import(/* webpackChunkName: "Register" */ '@/views/Login/Register')
 export function hasPermission (route, menu) {
   return route.meta && route.meta.role
     ? menu.includes(route.meta.role)
@@ -89,8 +90,14 @@ export const constantRoutes = [{
 {
   path: '/login',
   name: 'login',
-  meta: { title: 'login', hidden: true },
-  component: login
+  meta: { title: '登录', hidden: true },
+  component: Login
+},
+{
+  path: '/register',
+  name: 'register',
+  meta: { title: '注册', hidden: true },
+  component: Register
 }
 // {
 //   path: '/404',

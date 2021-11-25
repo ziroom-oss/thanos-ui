@@ -30,16 +30,18 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { doOauthLogout } from '@ziroom/zcloud-head'
 import Hamburger from '@/components/Hamburger/index'
+import { getUserInfo, removeToken, removeUserInfo } from '@/utils/auth'
 
 export default {
   name: 'Header',
   data () {
-    return {}
+    return {
+      userInfo: getUserInfo()
+    }
   },
   computed: {
-    ...mapGetters(['userInfo', 'sidebar', 'device'])
+    ...mapGetters(['sidebar', 'device'])
   },
   components: {
     Menu: () => import('./Menu/Menu'),
@@ -50,7 +52,9 @@ export default {
     onUserLogout () {
       const r = window.confirm('是否退出登陆？')
       if (r) {
-        doOauthLogout()
+        removeUserInfo()
+        removeToken()
+        this.$router.push('/login')
       }
     },
     toggleSideBar () {

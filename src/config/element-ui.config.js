@@ -57,6 +57,8 @@ import {
   Backtop,
   Icon,
   Collapse,
+  Descriptions,
+  DescriptionsItem,
   CollapseItem
 } from 'element-ui'
 
@@ -113,7 +115,8 @@ Vue.use(BreadcrumbItem)
 Vue.use(Icon)
 Vue.use(Collapse)
 Vue.use(CollapseItem)
-
+Vue.use(Descriptions)
+Vue.use(DescriptionsItem)
 
 Vue.prototype.$notify = Notification
 Vue.prototype.$message = Message

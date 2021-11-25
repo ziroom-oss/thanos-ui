@@ -8,6 +8,7 @@
  */
 
 export default {
+  namespaced: true,
   state: {
     username: '',
     token: '',
@@ -29,7 +30,7 @@ export default {
     }
   },
   actions: {
-    getUserinfo ({ commit }, data) {
+    setUserinfo ({ commit }, data) {
       return new Promise((resolve, reject) => {
         try {
           commit('SET_USER_INFO', data)
@@ -40,7 +41,7 @@ export default {
         }
       })
     },
-    getToken ({ commit }, data) {
+    setToken ({ commit }, data) {
       return new Promise((resolve, reject) => {
         try {
           commit('SET_TOKEN', data)
