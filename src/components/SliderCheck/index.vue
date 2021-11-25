@@ -64,7 +64,6 @@ export default {
     } // mouseup事件
   },
   mounted () {
-    console.log(this.$refs.dragDiv.clientWidth, this.$refs.moveDiv.offsetWidth)
     this.maxwidth = this.$refs.dragDiv.clientWidth - this.$refs.moveDiv.offsetWidth // 由于滑块有边框，所以使用offsetWidth
     document.getElementsByTagName('html')[0].addEventListener('mousemove', this.mouseMoveFn)
     document.getElementsByTagName('html')[0].addEventListener('mouseup', this.moseUpFn)

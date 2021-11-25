@@ -873,7 +873,6 @@ export default {
       var postSqlIds = ''
       var preSqlIds = ''
       var sqlItems = this.sqlForm.items
-      console.log(sqlItems)
       for (var i = 0; i < sqlItems.length; i++) {
         if (sqlItems[i].sqlType === '1') {
           preSqlIds += sqlItems[i].sqlId + ','
