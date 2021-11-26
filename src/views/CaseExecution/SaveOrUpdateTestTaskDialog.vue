@@ -141,224 +141,224 @@
 
 <script>
 
-  import {
-    getAppInfoList,
-    getOnlyCaseTitle,
-    getTestExeMethodMap,
-    getTestTaskTypeList,
-    queryTopicDropdownList,
-    saveOrUpdateTestTask,
-    saveTestCaseWithExecution,
-    getEhrUserDetailLikeUserName
-  } from '@/api/model/caseExecution'
-  import CASE_EXECUTION_CONFIG from '@/config/caseExecution.config'
-  import {validateIssueKey} from '@/api/model/jiraIssue'
-  import {getEhrInfo} from '@/api/model/testCase'
+import {
+  getAppInfoList,
+  getOnlyCaseTitle,
+  getTestExeMethodMap,
+  getTestTaskTypeList,
+  queryTopicDropdownList,
+  saveOrUpdateTestTask,
+  saveTestCaseWithExecution,
+  getEhrUserDetailLikeUserName
+} from '@/api/model/caseExecution'
+import CASE_EXECUTION_CONFIG from '@/config/caseExecution.config'
+import { validateIssueKey } from '@/api/model/jiraIssue'
+import { getEhrInfo } from '@/api/model/testCase'
 
-  export default {
-    name: 'SaveOrUpdateTestTaskDialog',
-    computed: {
-      cascaderConfig() {
-        return {
-          isToPerson: false, // true 细粒度到人 false 细粒度不到人
-          multipleCheck: false
-        }
+export default {
+  name: 'SaveOrUpdateTestTaskDialog',
+  computed: {
+    cascaderConfig () {
+      return {
+        isToPerson: false, // true 细粒度到人 false 细粒度不到人
+        multipleCheck: false
       }
+    }
+  },
+  async mounted () {
+    await this.getTestTaskTypeList()
+    await this.getDepartOrg()
+    await this.queryTopicDropdownList()
+    await this.getAppInfoList()
+  },
+  data: () => ({
+    createRelationCaseTest: {
+      taskId: '',
+      taskTestCaseIdList: ''
     },
-    async mounted() {
-      await this.getTestTaskTypeList()
-      await this.getDepartOrg()
-      await this.queryTopicDropdownList()
-      await this.getAppInfoList()
+    testCaseNumber: '',
+    testCaseNumberShow: false,
+    dialogVisible: false,
+    dialogTitle: '',
+    rules: CASE_EXECUTION_CONFIG.rules,
+    testTask: {
+      id: 0,
+      taskName: '',
+      ehrTreePath: [''],
+      taskType: '',
+      relationRequirement: '',
+      testTaskMaster: '',
+      testTaskExecutors: [],
+      testTopicId: '',
+      testExecutionType: '',
+      templateFlag: false,
+      appId: []
     },
-    data: () => ({
-      createRelationCaseTest: {
-        taskId: '',
-        taskTestCaseIdList: ''
-      },
-      testCaseNumber: '',
-      testCaseNumberShow: false,
-      dialogVisible: false,
-      dialogTitle: '',
-      rules: CASE_EXECUTION_CONFIG.rules,
-      testTask: {
-        id: 0,
-        taskName: '',
-        ehrTreePath: [''],
-        taskType: '',
-        relationRequirement: '',
-        testTaskMaster: '',
-        testTaskExecutors: [],
-        testTopicId: '',
-        testExecutionType: '',
-        templateFlag: false,
-        appId: []
-      },
-      testTopicList: [],
-      caseExecutionTypeList: [],
-      responsiblePersonList: [],
-      CASE_EXECUTION_CONFIG, // 枚举转换
-      afterHandledeptOrgList: [],
-      deptOrgList: [],
-      typeTestList: '',
-      appInfoList: [],
-      loading: false
-    }),
-    methods: {
-      // appIdChange() {
-      //   this.testTask.appId = this.testTask.appId.replace(/[\W]/g, '');
-      // },
-      async getTestExeMethodMap() {
-        const res = await getTestExeMethodMap()
-        this.typeTestList = res.data
-      },
-      userDistricts() {
-        this.$forceUpdate()
-      },
-      async checkOnlyCaseTitle(event) {
-        getOnlyCaseTitle({taskName: event.target.value})
-      },
-      async getTestTaskTypeList() { // 测试执行类型
-        const res = await getTestTaskTypeList()
-        this.caseExecutionTypeList = res.data
-      },
-      async getDepartOrg() { // 获取组织结构
-        const res = await getEhrInfo() || []
-        const childDept = res.data
-        this.deptOrgList = childDept.childDept
-        this.handleDeartOrg()
-      },
-      handleDeartOrg() {
-        this.afterHandledeptOrgList = this.flattenNotToPersonChild(this.deptOrgList)
-      },
-      flattenNotToPersonChild(options) { // 不到人
-        const that = this
-        const deptOptions = []
-        options.forEach(item => {
-          if (!item.last && item.childDept) {
-            deptOptions.push({
-              label: item.deptName,
-              value: item.deptCode,
-              children: (function () {
-                return that.flattenNotToPersonChild(item.childDept)
-              })()
-            })
-          } else if (item.last && item.childDept) {
-            deptOptions.push({
-              label: item.deptName,
-              value: item.deptCode
-            })
-          } else {
-            return false
-          }
-        })
-        return deptOptions
-      },
-      async validateIssueKey(event) {
-        validateIssueKey({issueKey: event.target.value})
-      },
-      async saveOrUpdateTestTask() {
-        await this.$refs.testTaskForm.validate((valid) => {
-          if (valid) {
-            const templateFlag = this.testTask.templateFlag
-            if (templateFlag && !this.testTask.appId) {
-              this.$notify({
-                type: 'error',
-                message: '选择为模板类型,则必须有模板ID!!!'
-              })
-              return
-            }
-            const ehrTreePath = this.testTask.ehrTreePath.toString()
-            const testTaskExecutorsStr = this.testTask.testTaskExecutors && this.testTask.testTaskExecutors.toString()
-            this.testTask.testTaskExecutors = testTaskExecutorsStr
-            const appIdStr = this.testTask.appId && this.testTask.appId.toString()
-            this.testTask.appId = appIdStr
-            const params = {
-              ...this.testTask,
-              ehrTreePath
-            }
-            saveOrUpdateTestTask(params)
-              .then(res => {
-                if (!res.success) {
-                  return
-                }
-                this.$notify({
-                  type: 'success',
-                  message: '保存成功'
-                })
-                if (this.testCaseNumberShow) {
-                  this.createRelationCaseTest.taskId = res.data
-                  this.createRelationCase()
-                }
-                this.$emit('queryCaseExecution')
-                this.cancelDialogVisible()
-              })
-          } else {
-            this.$notify({
-              type: 'error',
-              message: '保存失败'
-            })
-          }
-        })
-      },
-      async createRelationCase() {
-        const data = this.createRelationCaseTest
-        if (this.createRelationCaseTest.taskId && this.createRelationCaseTest.taskTestCaseIdList) {
-          await saveTestCaseWithExecution(data).then((res) => {
-            if (!res.success) {
-              return
-            }
-            this.$notify({
-              type: 'success',
-              message: '关联成功'
-            })
-            this.handleAssociateCase(data.taskId)
+    testTopicList: [],
+    caseExecutionTypeList: [],
+    responsiblePersonList: [],
+    CASE_EXECUTION_CONFIG, // 枚举转换
+    afterHandledeptOrgList: [],
+    deptOrgList: [],
+    typeTestList: '',
+    appInfoList: [],
+    loading: false
+  }),
+  methods: {
+    // appIdChange() {
+    //   this.testTask.appId = this.testTask.appId.replace(/[\W]/g, '');
+    // },
+    async getTestExeMethodMap () {
+      const res = await getTestExeMethodMap()
+      this.typeTestList = res.data
+    },
+    userDistricts () {
+      this.$forceUpdate()
+    },
+    async checkOnlyCaseTitle (event) {
+      getOnlyCaseTitle({ taskName: event.target.value })
+    },
+    async getTestTaskTypeList () { // 测试执行类型
+      const res = await getTestTaskTypeList()
+      this.caseExecutionTypeList = res.data
+    },
+    async getDepartOrg () { // 获取组织结构
+      const res = await getEhrInfo() || []
+      const childDept = res.data
+      this.deptOrgList = childDept.childDept
+      this.handleDeartOrg()
+    },
+    handleDeartOrg () {
+      this.afterHandledeptOrgList = this.flattenNotToPersonChild(this.deptOrgList)
+    },
+    flattenNotToPersonChild (options) { // 不到人
+      const that = this
+      const deptOptions = []
+      options.forEach(item => {
+        if (!item.last && item.childDept) {
+          deptOptions.push({
+            label: item.deptName,
+            value: item.deptCode,
+            children: (function () {
+              return that.flattenNotToPersonChild(item.childDept)
+            })()
+          })
+        } else if (item.last && item.childDept) {
+          deptOptions.push({
+            label: item.deptName,
+            value: item.deptCode
           })
         } else {
-          this.handleAssociateCase(data.taskId)
+          return false
         }
-      },
-      handleAssociateCase(data) { // 关联测试执行
-        this.$router.push({
-          path: '/caseExecutionDetailAndList',
-          query: {
-            type: 'add',
-            taskId: data,
-            testExecutionType: '1'
+      })
+      return deptOptions
+    },
+    async validateIssueKey (event) {
+      validateIssueKey({ issueKey: event.target.value })
+    },
+    async saveOrUpdateTestTask () {
+      await this.$refs.testTaskForm.validate((valid) => {
+        if (valid) {
+          const templateFlag = this.testTask.templateFlag
+          if (templateFlag && !this.testTask.appId) {
+            this.$notify({
+              type: 'error',
+              message: '选择为模板类型,则必须有模板ID!!!'
+            })
+            return
           }
-        })
-      },
-      async cancelDialogVisible() {
-        this.testTask = {}
-        this.dialogVisible = false
-      },
-      async queryTopicDropdownList() { // 查询项目的下拉菜单
-        const res = await queryTopicDropdownList()
-        this.testTopicList = res.data
-      },
-      async getAppInfoList() { // 查询appid集合
-        const res = await getAppInfoList()
-        this.appInfoList = res.data
-      },
-      // 获取用户名单
-      async getEhrUserDetailLikeUserName(userName) {
-        const params = {
-          userName: userName
-        }
-        const res = await getEhrUserDetailLikeUserName(params)
-        this.responsiblePersonList = res.data
-      },
-      remoteMethod(query) {
-        if (query !== '') {
-          this.loading = true
-          setTimeout(() => {
-            this.loading = false
-            this.getEhrUserDetailLikeUserName(query)
-          }, 200)
+          const ehrTreePath = this.testTask.ehrTreePath.toString()
+          const testTaskExecutorsStr = this.testTask.testTaskExecutors && this.testTask.testTaskExecutors.toString()
+          this.testTask.testTaskExecutors = testTaskExecutorsStr
+          const appIdStr = this.testTask.appId && this.testTask.appId.toString()
+          this.testTask.appId = appIdStr
+          const params = {
+            ...this.testTask,
+            ehrTreePath
+          }
+          saveOrUpdateTestTask(params)
+            .then(res => {
+              if (!res.success) {
+                return
+              }
+              this.$notify({
+                type: 'success',
+                message: '保存成功'
+              })
+              if (this.testCaseNumberShow) {
+                this.createRelationCaseTest.taskId = res.data
+                this.createRelationCase()
+              }
+              this.$emit('queryCaseExecution')
+              this.cancelDialogVisible()
+            })
         } else {
-          this.options = []
+          this.$notify({
+            type: 'error',
+            message: '保存失败'
+          })
         }
+      })
+    },
+    async createRelationCase () {
+      const data = this.createRelationCaseTest
+      if (this.createRelationCaseTest.taskId && this.createRelationCaseTest.taskTestCaseIdList) {
+        await saveTestCaseWithExecution(data).then((res) => {
+          if (!res.success) {
+            return
+          }
+          this.$notify({
+            type: 'success',
+            message: '关联成功'
+          })
+          this.handleAssociateCase(data.taskId)
+        })
+      } else {
+        this.handleAssociateCase(data.taskId)
+      }
+    },
+    handleAssociateCase (data) { // 关联测试执行
+      this.$router.push({
+        path: '/caseExecutionDetailAndList',
+        query: {
+          type: 'add',
+          taskId: data,
+          testExecutionType: '1'
+        }
+      })
+    },
+    async cancelDialogVisible () {
+      this.testTask = {}
+      this.dialogVisible = false
+    },
+    async queryTopicDropdownList () { // 查询项目的下拉菜单
+      const res = await queryTopicDropdownList()
+      this.testTopicList = res.data
+    },
+    async getAppInfoList () { // 查询appid集合
+      const res = await getAppInfoList()
+      this.appInfoList = res.data
+    },
+    // 获取用户名单
+    async getEhrUserDetailLikeUserName (userName) {
+      const params = {
+        userName: userName
+      }
+      const res = await getEhrUserDetailLikeUserName(params)
+      this.responsiblePersonList = res.data
+    },
+    remoteMethod (query) {
+      if (query !== '') {
+        this.loading = true
+        setTimeout(() => {
+          this.loading = false
+          this.getEhrUserDetailLikeUserName(query)
+        }, 200)
+      } else {
+        this.options = []
       }
     }
   }
+}
 </script>

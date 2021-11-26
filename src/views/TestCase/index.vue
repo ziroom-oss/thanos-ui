@@ -2,7 +2,7 @@
   <div>
     <el-radio-group size="medium" v-model="testName">
       <el-radio-button :label="HANDNAME">{{ HANDNAME }}</el-radio-button>
-      <el-radio-button :label="AUTONAME">{{ AUTONAME }}</el-radio-button>
+      <!-- <el-radio-button :label="AUTONAME">{{ AUTONAME }}</el-radio-button> -->
     </el-radio-group>
     <TestCase v-if="testName === HANDNAME" />
     <AutoCase v-else />

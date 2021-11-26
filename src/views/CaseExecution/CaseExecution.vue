@@ -141,183 +141,183 @@
   </div>
 </template>
 <script>
-  import {
-    batchDeleteTestTask,
-    getTaskTestCaseListByTaskId,
-    getTestTaskDetailById,
-    queryCaseExecution,
-    restartTaskStatus
-  } from '@/api/model/caseExecution'
-  import store from '@/store'
+import {
+  batchDeleteTestTask,
+  getTaskTestCaseListByTaskId,
+  getTestTaskDetailById,
+  queryCaseExecution,
+  restartTaskStatus
+} from '@/api/model/caseExecution'
+import { getUserInfo } from '@/utils/auth'
 
-  export default {
-    name: 'CaseExecution',
-    components: {
-      Search: () => import('./CaseExecutionSearch'),
-      SaveOrUpdateTestTaskDialog: () => import('./SaveOrUpdateTestTaskDialog'),
-      CaseReport: () => import('./CaseReport')
+export default {
+  name: 'CaseExecution',
+  components: {
+    Search: () => import('./CaseExecutionSearch'),
+    SaveOrUpdateTestTaskDialog: () => import('./SaveOrUpdateTestTaskDialog'),
+    CaseReport: () => import('./CaseReport')
+  },
+  async mounted () {
+    await this.queryCaseExecution()
+  },
+  data: () => ({
+    userName: getUserInfo().userName,
+    caseExecutionForm: {},
+    multipleSelectValue: [],
+    pagination: {
+      current: 1,
+      size: 10,
+      total: 0
     },
-    async mounted() {
+    caseExecutionDataSource: []
+  }),
+  methods: {
+    async queryCaseExecution () { // 执行列表数据
+      const { ehrTreePath, startTimeVal, endTimeVal, testExecutionType } = this.caseExecutionForm // 查询条件
+      const data = {
+        searchObj: {
+          ...this.caseExecutionForm,
+          ehrTreePath: ehrTreePath ? ehrTreePath.toString() : '',
+          startTimeVal: startTimeVal ? startTimeVal.toString() : '',
+          endTimeVal: endTimeVal ? endTimeVal.toString() : '',
+          testExecutionType: testExecutionType || ''
+        },
+        page: {
+          ...this.pagination
+        }
+      } // 根据接口要求处理请求参数
+      const res = await queryCaseExecution(data)
+      var respData = res.data
+      this.caseExecutionDataSource = respData.records
+      this.pagination.total = respData.total
+    },
+    async handleCurrentChange (val) { // 分页
+      this.pagination.current = val
       await this.queryCaseExecution()
     },
-    data: () => ({
-      userName: store.getters.userInfo.userName,
-      caseExecutionForm: {},
-      multipleSelectValue: [],
-      pagination: {
-        current: 1,
-        size: 10,
-        total: 0
-      },
-      caseExecutionDataSource: []
-    }),
-    methods: {
-      async queryCaseExecution() { // 执行列表数据
-        const {ehrTreePath, startTimeVal, endTimeVal, testExecutionType} = this.caseExecutionForm // 查询条件
-        const data = {
-          searchObj: {
-            ...this.caseExecutionForm,
-            ehrTreePath: ehrTreePath ? ehrTreePath.toString() : '',
-            startTimeVal: startTimeVal ? startTimeVal.toString() : '',
-            endTimeVal: endTimeVal ? endTimeVal.toString() : '',
-            testExecutionType: testExecutionType || ''
-          },
-          page: {
-            ...this.pagination
-          }
-        } // 根据接口要求处理请求参数
-        const res = await queryCaseExecution(data)
-        var respData = res.data
-        this.caseExecutionDataSource = respData.records
-        this.pagination.total = respData.total
-      },
-      async handleCurrentChange(val) { // 分页
-        this.pagination.current = val
-        await this.queryCaseExecution()
-      },
-      handleSizeChange(val) {
-        this.pagination.size = val
-        this.queryCaseExecution()
-      },
-      async onSearch() {
-        this.pagination.current = 1
-        await this.queryCaseExecution()
-      },
-      handleAssociateCase(data) { // 运行按钮
-        this.$router.push({
-          path: '/caseExecutionDetailAndList',
-          query: {
-            type: 'add',
-            taskId: data.id,
-            testExecutionType: data.testExecutionType
-          }
-        })
-      },
-      async addTestTaskDialog() {
-        this.$refs.SaveOrUpdateTestTaskDialog.testTask = {}
-        this.$refs.SaveOrUpdateTestTaskDialog.dialogTitle = '新建测试执行任务'
-        this.$refs.SaveOrUpdateTestTaskDialog.testTask.testTaskMaster = this.userName
-        this.$refs.SaveOrUpdateTestTaskDialog.testTask.testTaskExecutors = this.userName.split(',')
-        this.$refs.SaveOrUpdateTestTaskDialog.testTask.testExecutionType = '1'
-        await this.$refs.SaveOrUpdateTestTaskDialog.getTestExeMethodMap()
-        this.$refs.SaveOrUpdateTestTaskDialog.dialogVisible = true
-      },
-      async editTestTaskDialog(id) { // 编辑
-        await this.$refs.SaveOrUpdateTestTaskDialog.getTestExeMethodMap()
-        const res = await getTestTaskDetailById({id: id})
-        const respData = res.data
-        const deptCodeArr = respData.ehrTreePath ? respData.ehrTreePath.split(',') : ''
-        const deptCodeArray = deptCodeArr ? deptCodeArr.splice(0, deptCodeArr.length) : ''
-        respData.ehrTreePath = deptCodeArray
-        this.$refs.SaveOrUpdateTestTaskDialog.testTask = respData
-        this.$refs.SaveOrUpdateTestTaskDialog.testTask.testExecutionType = this.$refs.SaveOrUpdateTestTaskDialog.testTask.testExecutionType.toString()
-        this.$refs.SaveOrUpdateTestTaskDialog.testTask.testTaskExecutors = respData.testTaskExecutors && respData.testTaskExecutors.split(',')
-        this.$refs.SaveOrUpdateTestTaskDialog.testTask.appId = respData.appId && respData.appId.split(',')
-        this.$refs.SaveOrUpdateTestTaskDialog.dialogTitle = '编辑测试执行任务'
-        this.$refs.SaveOrUpdateTestTaskDialog.dialogVisible = true
-      },
-      async openEmailPage(id) {
-        this.$refs.CaseReport.CaseReportShow = true
-        this.$refs.CaseReport.emailFlag = true
-        this.$refs.CaseReport.emailInfo.sender = this.userName
-        await this.$refs.CaseReport.CaseReportClick(id)
-      },
-      async completeTestTaskDialog(id) {
-        this.$refs.CaseReport.CaseReportShow = true
-        this.$refs.CaseReport.complateFlag = true
-        this.$refs.CaseReport.emailInfo.sender = this.userName
-        await this.$refs.CaseReport.CaseReportClick(id)
-      },
-      async TestTaskDialog(id) { // 查看测试报告
-        this.$refs.CaseReport.CaseReportShow = true
-        this.$refs.CaseReport.emailFlag = false
-        await this.$refs.CaseReport.CaseReportClick(id)
-      },
-      async deleteTestTaskDialog(id) {
-        const res = await getTaskTestCaseListByTaskId({taskId: id})
-        const result = res.data
-        if (result.length <= 0) {
-          await this.batchDeleteTestTask('此操作将永久删除测试执行任务, 是否继续?\', \'提示', id)
-        } else {
-          const deleteMessage = '已关联测试用例总数为：' + result.length + '条确定要删除吗？'
-          await this.batchDeleteTestTask(deleteMessage, id)
+    handleSizeChange (val) {
+      this.pagination.size = val
+      this.queryCaseExecution()
+    },
+    async onSearch () {
+      this.pagination.current = 1
+      await this.queryCaseExecution()
+    },
+    handleAssociateCase (data) { // 运行按钮
+      this.$router.push({
+        path: '/caseExecutionDetailAndList',
+        query: {
+          type: 'add',
+          taskId: data.id,
+          testExecutionType: data.testExecutionType
         }
-      },
+      })
+    },
+    async addTestTaskDialog () {
+      this.$refs.SaveOrUpdateTestTaskDialog.testTask = {}
+      this.$refs.SaveOrUpdateTestTaskDialog.dialogTitle = '新建测试执行任务'
+      this.$refs.SaveOrUpdateTestTaskDialog.testTask.testTaskMaster = this.userName
+      this.$refs.SaveOrUpdateTestTaskDialog.testTask.testTaskExecutors = this.userName.split(',')
+      this.$refs.SaveOrUpdateTestTaskDialog.testTask.testExecutionType = '1'
+      await this.$refs.SaveOrUpdateTestTaskDialog.getTestExeMethodMap()
+      this.$refs.SaveOrUpdateTestTaskDialog.dialogVisible = true
+    },
+    async editTestTaskDialog (id) { // 编辑
+      await this.$refs.SaveOrUpdateTestTaskDialog.getTestExeMethodMap()
+      const res = await getTestTaskDetailById({ id: id })
+      const respData = res.data
+      const deptCodeArr = respData.ehrTreePath ? respData.ehrTreePath.split(',') : ''
+      const deptCodeArray = deptCodeArr ? deptCodeArr.splice(0, deptCodeArr.length) : ''
+      respData.ehrTreePath = deptCodeArray
+      this.$refs.SaveOrUpdateTestTaskDialog.testTask = respData
+      this.$refs.SaveOrUpdateTestTaskDialog.testTask.testExecutionType = this.$refs.SaveOrUpdateTestTaskDialog.testTask.testExecutionType.toString()
+      this.$refs.SaveOrUpdateTestTaskDialog.testTask.testTaskExecutors = respData.testTaskExecutors && respData.testTaskExecutors.split(',')
+      this.$refs.SaveOrUpdateTestTaskDialog.testTask.appId = respData.appId && respData.appId.split(',')
+      this.$refs.SaveOrUpdateTestTaskDialog.dialogTitle = '编辑测试执行任务'
+      this.$refs.SaveOrUpdateTestTaskDialog.dialogVisible = true
+    },
+    async openEmailPage (id) {
+      this.$refs.CaseReport.CaseReportShow = true
+      this.$refs.CaseReport.emailFlag = true
+      this.$refs.CaseReport.emailInfo.sender = this.userName
+      await this.$refs.CaseReport.CaseReportClick(id)
+    },
+    async completeTestTaskDialog (id) {
+      this.$refs.CaseReport.CaseReportShow = true
+      this.$refs.CaseReport.complateFlag = true
+      this.$refs.CaseReport.emailInfo.sender = this.userName
+      await this.$refs.CaseReport.CaseReportClick(id)
+    },
+    async TestTaskDialog (id) { // 查看测试报告
+      this.$refs.CaseReport.CaseReportShow = true
+      this.$refs.CaseReport.emailFlag = false
+      await this.$refs.CaseReport.CaseReportClick(id)
+    },
+    async deleteTestTaskDialog (id) {
+      const res = await getTaskTestCaseListByTaskId({ taskId: id })
+      const result = res.data
+      if (result.length <= 0) {
+        await this.batchDeleteTestTask('此操作将永久删除测试执行任务, 是否继续?\', \'提示', id)
+      } else {
+        const deleteMessage = '已关联测试用例总数为：' + result.length + '条确定要删除吗？'
+        await this.batchDeleteTestTask(deleteMessage, id)
+      }
+    },
 
-      async restartTestTaskDialog(id) { // 重启按钮
-        const res = await restartTaskStatus({idList: id})
-        if (res.success) {
-          this.$notify({
-            type: 'success',
-            message: '重启' + res.message
-          })
-          await this.queryCaseExecution()
-        }
-      },
-      async batchDeleteTestTask(title, id) {
-        await this.$confirm(title, {
+    async restartTestTaskDialog (id) { // 重启按钮
+      const res = await restartTaskStatus({ idList: id })
+      if (res.success) {
+        this.$notify({
+          type: 'success',
+          message: '重启' + res.message
+        })
+        await this.queryCaseExecution()
+      }
+    },
+    async batchDeleteTestTask (title, id) {
+      await this.$confirm(title, {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        batchDeleteTestTask({ idList: id }).then((resultData) => {
+          this.queryCaseExecution()
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        })
+      })
+    },
+    onBatchDelete () {
+      // 批量审批 选中用例为空，则提示
+      this.multipleSelectValue.length === 0
+        ? this.$notify({
+          type: 'error',
+          title: 'Error',
+          message: '先选择需要删除的信息～'
+        })
+        : this.$confirm('确定删除？', '提示', { // delete
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
-        }).then(() => {
-          batchDeleteTestTask({idList: id}).then((resultData) => {
-            this.queryCaseExecution()
+        }).then(async () => {
+          let ids = ''
+          this.multipleSelectValue.forEach(function (item, index) {
+            ids += item.id + ','
           })
-        }).catch(() => {
-          this.$message({
-            type: 'info',
-            message: '已取消删除'
-          })
+          const params = { idList: ids }
+          await batchDeleteTestTask(params)
+          await this.queryCaseExecution()
         })
-      },
-      onBatchDelete() {
-        // 批量审批 选中用例为空，则提示
-        this.multipleSelectValue.length === 0
-          ? this.$notify({
-            type: 'error',
-            title: 'Error',
-            message: '先选择需要删除的信息～'
-          })
-          : this.$confirm('确定删除？', '提示', { // delete
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }).then(async () => {
-            let ids = ''
-            this.multipleSelectValue.forEach(function (item, index) {
-              ids += item.id + ','
-            })
-            const params = {idList: ids}
-            await batchDeleteTestTask(params)
-            await this.queryCaseExecution()
-          })
-      },
-      handleSelectionChange(val) {
-        this.multipleSelectValue = val
-      }
-
+    },
+    handleSelectionChange (val) {
+      this.multipleSelectValue = val
     }
+
   }
+}
 </script>
 <style scoped lang="scss">
   .pagination {

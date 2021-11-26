@@ -1,6 +1,5 @@
 import _$http from '../http'
-
-const baseURL = '/quality-defende-provider'
+import { baseURL } from '@/config/baseConfig.config'
 
 /*
 * 测试用例执行
