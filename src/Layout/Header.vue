@@ -8,7 +8,7 @@
     </div>
     <div class="headerLogo">
       <div class="header-logo"></div>
-      <h3 class="logoText">质量保障服务平台</h3>
+      <h3 class="logoText">灭霸服务平台</h3>
     </div>
     <Menu class="menu mobie" v-show="sidebar.opened || device === 'desktop'" />
     <div class="header-right">
