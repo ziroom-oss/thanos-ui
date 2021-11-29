@@ -4,6 +4,7 @@
  * @LastEditTime: 2021-06-17 15:53:53
  */
 import { constantRoutes, asyncRoutes } from '@/router/routes'
+import router from '@/router'
 const hasPermission = (route, role) => {
   // 权限判断可以自由改写
   return route.meta && route.meta.roles
@@ -23,10 +24,11 @@ const filterAsyncRoute = (routes, role) => {
 }
 
 export default {
+  namespaced: true,
   state: {
     routes: [],
     // routes: JSON.parse(sessionStorage.getItem('routes')),
-    addRoutes: []
+    addRoutes: null
   },
   mutations: {
     SET_ROUTES: (state, addRoutes) => {
@@ -39,16 +41,9 @@ export default {
   },
   actions: {
     generateRoutes ({ commit }, role) {
-      return new Promise((resolve, reject) => {
-        try {
-          const accessRoutes = filterAsyncRoute(asyncRoutes, role)
-          commit('SET_ROUTES', accessRoutes)
-          resolve(accessRoutes)
-        } catch (err) {
-          // eslint-disable-next-line prefer-promise-reject-errors
-          reject('Set routes failed: ' + err.message)
-        }
-      })
+      const accessRoutes = filterAsyncRoute(asyncRoutes, role)
+      router.addRoutes(accessRoutes)
+      commit('SET_ROUTES', accessRoutes)
     }
   }
 }

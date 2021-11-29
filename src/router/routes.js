@@ -26,6 +26,8 @@ const caseExecutionDetailAndList = () => import('@/views/CaseExecution/CaseExecu
 // const ApiCaseExecution = () => import('@/src/views/CaseExecution/ApiCaseExecution/ApiCaseExecution.bak')
 const unFound = () => import(/* webpackChunkName: "404" */ '@/components/404/404')
 const unUser = () => import(/* webpackChunkName: "500" */ '@/components/500/500')
+const Login = () => import(/* webpackChunkName: "Login" */ '@/views/Login/Login')
+const Register = () => import(/* webpackChunkName: "Register" */ '@/views/Login/Register')
 export function hasPermission (route, menu) {
   return route.meta && route.meta.role
     ? menu.includes(route.meta.role)
@@ -70,20 +72,32 @@ export const constantRoutes = [{
       roles: ['user', 'admin', 'superAdmin']
     },
     component: projectReport
-  },
-  {
-    path: '/404',
-    name: '404',
-    meta: { title: '404', hidden: true, roles: ['admin', 'user', 'superAdmin'] },
-    component: unFound
-  },
-  {
-    path: '/500',
-    name: '500',
-    meta: { title: '500', hidden: true, roles: ['admin', 'user', 'superAdmin'] },
-    component: unUser
   }
   ]
+},
+{
+  path: '/404',
+  name: '404',
+  meta: { title: '404', hidden: true, roles: ['admin', 'user', 'superAdmin'] },
+  component: unFound
+},
+{
+  path: '/500',
+  name: '500',
+  meta: { title: '500', hidden: true, roles: ['admin', 'user', 'superAdmin'] },
+  component: unUser
+},
+{
+  path: '/login',
+  name: 'login',
+  meta: { title: '登录', hidden: true },
+  component: Login
+},
+{
+  path: '/register',
+  name: 'register',
+  meta: { title: '注册', hidden: true },
+  component: Register
 }
 // {
 //   path: '/404',

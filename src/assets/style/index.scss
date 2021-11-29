@@ -17,3 +17,10 @@ a{
 .el-dialog{
   border-radius: 10px;
 }
+// 垂直水平居中
+.md-wrap{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}

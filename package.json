@@ -22,7 +22,7 @@
     "codemirror": "^5.62.0",
     "core-js": "^3.6.5",
     "echarts": "^5.1.1",
-    "element-ui": "^2.15.1",
+    "element-ui": "^2.15.6",
     "glob": "^7.1.7",
     "js-cookie": "^2.2.1",
     "jsonlint": "^1.6.3",

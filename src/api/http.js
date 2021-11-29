@@ -9,8 +9,8 @@
 import axios from 'axios'
 import { Notification } from 'element-ui'
 import qs from 'qs'
-import store from '@/store'
-import { getOauthToken } from '@ziroom/zcloud-head'
+import { getToken, getUserInfo } from '@/utils/auth'
+import router from '@/router'
 
 // 创建axios实例
 
@@ -24,10 +24,11 @@ instance.defaults.headers.post['Content-Type'] = 'application/json; charset=utf-
 
 instance.interceptors.request.use(
   config => {
-    config.headers['X-ZCLOUD-TOKEN'] = getOauthToken()
     config.headers.appId = process.env.VUE_APP_APPCODE
-    if (store.getters.userInfo) {
-      const { userName, nickName, uid, userType } = store.getters.userInfo
+    config.headers.userToken = getToken()
+    const userInfo = getUserInfo()
+    if (userInfo) {
+      const { userName, nickName, uid, userType } = userInfo
       config.headers.userName = userName
       config.headers.userType = userType
       config.headers.nickName = encodeURIComponent(nickName)
@@ -43,6 +44,15 @@ instance.interceptors.request.use(
 
 instance.interceptors.response.use(response => {
   const { data } = response
+  if (data.code === 400) {
+    router.push('/login')
+    Notification({
+      type: 'warning',
+      title: 'Warning',
+      message: data.message || data.data || data.errorMessage || '响应报错，请重新请求'
+    })
+    return data
+  }
   if (!data.success) {
     Notification({
       type: 'error',

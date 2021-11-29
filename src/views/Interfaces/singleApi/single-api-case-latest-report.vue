@@ -160,7 +160,6 @@ export default {
     getApiCaseList () {
       // 获取case名称列表
       getCaseList({ caseIds: this.routerParams }).then(response => {
-        console.log(response.data)
         this.tableCaseName = response.data
       })
     },

@@ -18,13 +18,13 @@ const REQUEST_TAB_LISTS = [{
   name: 'Pre-request API',
   value: 0,
   status: '',
-  badge: "先"
+  badge: '先'
 },
 {
   name: 'Pre-request SQL',
   value: 0,
   status: '',
-  badge: "后"
+  badge: '后'
 },
 {
   name: 'Tests',
