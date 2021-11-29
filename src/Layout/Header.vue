@@ -8,7 +8,7 @@
     </div>
     <div class="headerLogo">
       <div class="header-logo"></div>
-      <h3 class="logoText">灭霸服务平台</h3>
+      <h3 class="logoText">THANOS</h3>
     </div>
     <Menu class="menu mobie" v-show="sidebar.opened || device === 'desktop'" />
     <div class="header-right">
@@ -121,14 +121,16 @@ export default {
     width: 290px;
     height: 60px;
     overflow: hidden;
+    display: flex;
+    align-items: center;
   }
   .header-logo {
     cursor: pointer;
-    width: 50px;
-    margin-top: 5px;
+    width: 40px;
     margin-left: 60px;
-    height: 50px;
-    background: url(../assets/img/favicon.png) no-repeat center;
+    margin-right: 10px;
+    height: 40px;
+    background: url(../assets/img/logo.png) no-repeat center;
     background-size: 100% 100%;
     float: left;
   }
