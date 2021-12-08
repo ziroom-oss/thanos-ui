@@ -163,52 +163,52 @@
   </div>
 </template>
 <script>
-import store from '@/store'
 import { queryTestCaseTypeList, validateIssueKey } from '@/api/model/testCase'
 import TEST_CASE_CONFIG from '@/config/testCase.config.js'
 import { moduleTreeMixin } from './mixin/mixin'
 import { queryTestApplicationTypeList } from '@/api/model/dataDictionary'
-
+import { getToken, getUserInfo } from '@/utils/auth'
 export default {
   name: 'testCaseUploadDialog',
   mixins: [moduleTreeMixin],
-  data: () => ({
-    secondShow: true,
-    TEST_CASE_CONFIG,
-    activeName: 'first',
-    testCaseUploadDialog: false,
-    testCaseUploadForm: {
-      belongToSystem: '',
-      belongToModule: '',
-      relationRequirement: '',
-      belongPlatform: '',
-      type: '',
-      uploadFlag: true
-    },
-    showMessage: '',
-    messageShow: false,
-    belongToModule: [],
-    applicationTypeList: [],
-    loading: true,
-    limit: 1, // 上传excell时，同时允许上传的最大数
-    fileList: [],
-    actionUrl: `${process.env.VUE_APP_BASE_API}/testCase/uploadTestCase`,
-    headers: {
-      uid: store.getters.userInfo.uid,
-      userName: store.getters.userInfo.userName,
-      nickName: encodeURIComponent(store.getters.userInfo.nickName),
-      userType: store.getters.userInfo.userType
-    },
-    caseTypeList: [],
-    rules: {
-      belongToSystem: [{ required: true, message: '所属应用不能为空！', trigger: 'blur' }],
-      belongToModule: [{ required: true, message: '所属模块不能为空！', trigger: 'blur' }],
-      relationRequirement: [{ required: true, message: 'Jira ID 不能为空！', trigger: 'blur' }],
-      belongPlatform: [{ required: false, message: '所属平台不能为空！', trigger: 'blur' }],
-      type: [{ required: false, message: '用例类型不能为空！', trigger: 'blur' }]
-    },
-    buttonLoading: false
-  }),
+  data: () => {
+    const userInfo = getUserInfo()
+    return {
+      secondShow: true,
+      TEST_CASE_CONFIG,
+      activeName: 'first',
+      testCaseUploadDialog: false,
+      testCaseUploadForm: {
+        belongToSystem: '',
+        belongToModule: '',
+        relationRequirement: '',
+        belongPlatform: '',
+        type: '',
+        uploadFlag: true
+      },
+      showMessage: '',
+      messageShow: false,
+      belongToModule: [],
+      applicationTypeList: [],
+      loading: true,
+      limit: 1, // 上传excell时，同时允许上传的最大数
+      fileList: [],
+      actionUrl: `${process.env.VUE_APP_BASE_API}/testCase/uploadTestCase`,
+      headers: {
+        userToken: getToken(),
+        userName: userInfo.userName,
+      },
+      caseTypeList: [],
+      rules: {
+        belongToSystem: [{ required: true, message: '所属应用不能为空！', trigger: 'blur' }],
+        belongToModule: [{ required: true, message: '所属模块不能为空！', trigger: 'blur' }],
+        relationRequirement: [{ required: true, message: 'Jira ID 不能为空！', trigger: 'blur' }],
+        belongPlatform: [{ required: false, message: '所属平台不能为空！', trigger: 'blur' }],
+        type: [{ required: false, message: '用例类型不能为空！', trigger: 'blur' }]
+      },
+      buttonLoading: false
+    }
+  },
   watch: {
     activeName: function (val) {
       if (val === 'second') {
